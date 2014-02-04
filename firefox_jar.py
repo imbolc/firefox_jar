@@ -20,9 +20,15 @@ Usage
 '''
 import os
 import sqlite3
-import StringIO
-import cookielib
-import ConfigParser
+import io
+try:
+    import cookielib
+except ImportError:
+    import http.cookiejar as cookielib
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
 
 __version__ = '0.0.1'
 
@@ -39,7 +45,7 @@ def firefox_jar(firefox_config_dir='~/.mozilla/firefox'):
 
 def get_dbpath(dirname):
     dirname = os.path.expanduser(dirname)
-    config = ConfigParser.RawConfigParser(allow_no_value=True)
+    config = configparser.ConfigParser(allow_no_value=True)
     config.read(os.path.join(dirname, 'profiles.ini'))
     profile_dirname = os.path.join(dirname, config.get('Profile0', 'Path'))
     return os.path.join(profile_dirname, 'cookies.sqlite')
@@ -56,7 +62,7 @@ def sqlite_to_jar(filename):
     )
 
     ftstr = ['FALSE', 'TRUE']
-    s = StringIO.StringIO()
+    s = io.StringIO()
     s.write(NETSCAPE_SIGN)
     for item in cur.fetchall():
         s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
