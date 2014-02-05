@@ -9,14 +9,13 @@ Install
 
 Usage
 -----
-    import requests
-    from firefox_jar import firefox_jar
+    >>> import requests
+    >>> from firefox_jar import firefox_jar
 
-    with requests.session() as s:
-        s.cookies = firefox_jar()
-
-        r = s.get('http://yandex.ru/')
-        assert 'imbolc' in r.text  # check my username on the page
+    >>> with requests.session() as s:
+    ...     s.cookies = firefox_jar()
+    ...     r = s.get('https://pypi.python.org/pypi')
+    ...     assert 'Your details</a>' in r.text  # you should be logged in ff
 '''
 import os
 import sqlite3
@@ -49,7 +48,7 @@ def get_dbpath(dirname, name='default'):
     config = configparser.ConfigParser(allow_no_value=True)
     config.read(os.path.join(dirname, 'profiles.ini'))
     paths = [config.get(s, 'Path') for s in config.sections()
-             if config.get(s, 'Name') == name]
+             if config.get(s, 'Name', None) == name]
     if len(paths) >= 1:
         prof_name = paths[0]
     else:
@@ -81,3 +80,8 @@ def sqlite_to_jar(filename):
     cookie_jar = cookielib.MozillaCookieJar()
     cookie_jar._really_load(s, '', True, True)
     return cookie_jar
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod(verbose=True)
