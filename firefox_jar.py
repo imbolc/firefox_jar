@@ -14,9 +14,10 @@ Usage
 
     >>> with requests.session() as s:
     ...     s.cookies = firefox_jar()
-    ...     r = s.get('https://pypi.python.org/pypi')
-    ...     assert 'Your details</a>' in r.text  # you should be logged in ff
+    ...     r = s.get('http://yandex.ru')
+    ...     assert 'imbolc' in r.text  # you should be logged in ff
 '''
+from __future__ import unicode_literals
 import os
 import sqlite3
 import io
@@ -29,7 +30,7 @@ try:
 except ImportError:
     import configparser
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 NETSCAPE_SIGN = '''# Netscape HTTP Cookie File
 # http://www.netscape.com/newsref/std/cookie_spec.html
@@ -43,18 +44,20 @@ def firefox_jar(firefox_config_dir='~/.mozilla/firefox',
     return sqlite_to_jar(dbpath)
 
 
-def get_dbpath(dirname, name='default'):
+def get_dbpath(dirname, profile_name='default'):
     dirname = os.path.expanduser(dirname)
     config = configparser.ConfigParser(allow_no_value=True)
     config.read(os.path.join(dirname, 'profiles.ini'))
-    paths = [config.get(s, 'Path') for s in config.sections()
-             if config.get(s, 'Name', None) == name]
-    if len(paths) >= 1:
-        prof_name = paths[0]
-    else:
-        prof_name = config.get('Profile0', 'Path')
 
-    profile_dirname = os.path.join(dirname, prof_name)
+    for section in config.sections():
+        if config.has_option(section, 'Name'):
+            if config.get(section, 'Name') == profile_name:
+                profile_dirname = config.get(section, 'Path')
+                break
+    else:
+        raise Exception('Profile with name "%s" not found' % profile_name)
+
+    profile_dirname = os.path.join(dirname, profile_dirname)
     return os.path.join(profile_dirname, 'cookies.sqlite')
 
 

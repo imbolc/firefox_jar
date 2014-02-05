@@ -8,11 +8,10 @@ Install
 
 Usage
 -----
-    import requests
-    from firefox_jar import firefox_jar
+    >>> import requests
+    >>> from firefox_jar import firefox_jar
 
-    with requests.session() as s:
-        s.cookies = firefox_jar()
-
-        r = s.get('http://yandex.ru/')
-        assert 'imbolc' in r.text  # check my username on the page
+    >>> with requests.session() as s:
+    ...     s.cookies = firefox_jar()
+    ...     r = s.get('http://yandex.ru')
+    ...     assert 'imbolc' in r.text  # you should be logged in ff
