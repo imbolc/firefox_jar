@@ -38,16 +38,24 @@ NETSCAPE_SIGN = '''# Netscape HTTP Cookie File
 '''
 
 
-def firefox_jar(firefox_config_dir='~/.mozilla/firefox'):
-    dbpath = get_dbpath(firefox_config_dir)
+def firefox_jar(firefox_config_dir='~/.mozilla/firefox',
+                profile_name='default'):
+    dbpath = get_dbpath(firefox_config_dir, profile_name)
     return sqlite_to_jar(dbpath)
 
 
-def get_dbpath(dirname):
+def get_dbpath(dirname, name='default'):
     dirname = os.path.expanduser(dirname)
     config = configparser.ConfigParser(allow_no_value=True)
     config.read(os.path.join(dirname, 'profiles.ini'))
-    profile_dirname = os.path.join(dirname, config.get('Profile0', 'Path'))
+    paths = [config.get(s, 'Path') for s in config.sections()
+             if config.get(s, 'Name') == name]
+    if len(paths) >= 1:
+        prof_name = paths[0]
+    else:
+        prof_name = config.get('Profile0', 'Path')
+
+    profile_dirname = os.path.join(dirname, prof_name)
     return os.path.join(profile_dirname, 'cookies.sqlite')
 
 
