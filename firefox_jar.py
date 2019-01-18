@@ -18,9 +18,10 @@ Usage
     ...     assert 'imbolc' in r.text  # you should be logged in ff
 '''
 from __future__ import unicode_literals
+import io
 import os
 import sqlite3
-import io
+import tempfile
 try:
     import cookielib
 except ImportError:
@@ -65,23 +66,27 @@ def sqlite_to_jar(filename):
     '''
     Orig: http://blog.mithis.net/archives/python/94-reading-cookies-firefox
     '''
-    con = sqlite3.connect(filename)
-    cur = con.cursor()
-    cur.execute(
-        'select host, path, isSecure, expiry, name, value from moz_cookies'
-    )
-
-    ftstr = ['FALSE', 'TRUE']
-    s = io.StringIO()
-    s.write(NETSCAPE_SIGN)
-    for item in cur.fetchall():
-        s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
-            item[0], ftstr[item[0].startswith('.')], item[1],
-            ftstr[item[2]], item[3], item[4], item[5]))
-    s.seek(0)
-
     cookie_jar = cookielib.MozillaCookieJar()
-    cookie_jar._really_load(s, '', True, True)
+    # Since Firefox 15, the cookies database is permanently locked, so
+    # we have to work on a copy
+    with tempfile.NamedTemporaryFile(suffix=".sqlite") as tempdbf:
+        with open(filename, "rb") as origdb:
+            tempdbf.write(origdb.read())
+
+        tempdbf.seek(0)
+        con = sqlite3.connect(tempdbf.name)
+        cur = con.cursor()
+        cur.execute('select host, path, isSecure, expiry, name, value from moz_cookies')
+        ftstr = ['FALSE', 'TRUE']
+        s = io.StringIO()
+        s.write(NETSCAPE_SIGN)
+        for item in cur.fetchall():
+            s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
+                item[0], ftstr[item[0].startswith('.')], item[1],
+                ftstr[item[2]], item[3], item[4], item[5]))
+        s.seek(0)
+
+        cookie_jar._really_load(s, '', True, True)
     return cookie_jar
 
 
