@@ -31,7 +31,7 @@ try:
 except ImportError:
     import configparser
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 NETSCAPE_SIGN = '''# Netscape HTTP Cookie File
 # http://www.netscape.com/newsref/std/cookie_spec.html
